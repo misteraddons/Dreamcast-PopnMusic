@@ -32,8 +32,16 @@
 #define SHOULD_SEND 1		// Set to zero to sniff two devices sending signals to each other
 #define SHOULD_PRINT 0		// Nice for debugging but can cause timing issues
 
-#define POPNMUSIC 1			// Pop'n Music controller or generic controller
-#define NUM_BUTTONS	9		// On a Pop'n Music controller
+#define POPNMUSIC 0			// Pop'n Music controller
+#define DCCONTROLLER 0		// Dreamcast Controller
+#define DCJOYSTICK 0		// Dreamcast Joystick
+#if POPNMUSIC
+	#define NUM_BUTTONS	9
+#elseif DCCONTROLLER
+	#define NUM_BUTTONS	16
+#elseif DCJOYSTICK
+	#define NUM_BUTTONS	16
+#endif
 #define FADE_SPEED 8		// How fast the LEDs fade after press
 #define START_BUTTON 0x0008	// Bitmask for the start button
 #define START_MASK 0x0251	// Key combination for Start as we don't have a dedicated button
@@ -204,18 +212,57 @@ typedef struct ButtonInfo_s
 } ButtonInfo;
 
 static ButtonInfo ButtonInfos[NUM_BUTTONS]=
-{
-	{ 16, 13, 0x0040, 0 },	// White left
-	{ 17, 12, 0x0010, 0 },	// Yellow left
-	{ 18, 11, 0x0020, 0 },	// Green left
-	{ 19, 10, 0x0080, 0 },	// Blue left
-	{ 20, 9, 0x0004, 0 },	// Red centre
-	{ 21, 8, 0x0400, 0 },	// Blue right
-	{ 22, 7, 0x0002, 0 },	// Green right
-	{ 26, 6, 0x0200, 0 },	// Yellow right
-	{ 27, 5, 0x0001, 0 }	// White right
-};
+// PORKCHOP
+// Device / function_data (decimal) / function_data (binary)
+// DC Controller / 0x000f06fe / 11110000011011111110
+// DC Joystick   / 0x00002047 / 00000000011111111111
+// Pop'n Music   / 0x000006ff / 00000000011011111111
+//
+// Bit	Decimal	    Control  Controller  Joystick  Pop'n 'Music
+// 0	0x0000001	C		 NO			 YES	   YES
+// 1	0x0000002	B		 YES		 YES	   YES
+// 2	0x0000004	A		 YES		 YES	   YES
+// 3	0x0000008	START	 YES		 YES	   YES
+// 4	0x0000016	UP		 YES		 YES	   YES
+// 5	0x0000032	DOWN	 YES		 YES	   YES
+// 6	0x0000064	LEFT	 YES		 YES	   YES
+// 7	0x0000128	RIGHT	 YES		 YES	   YES
+// 8	0x0000256	Z		 NO			 YES	   NO
+// 9	0x0000512	Y		 YES		 YES	   YES
+// 10	0x0001024	X		 YES		 YES	   YES
+// 11	0x0002048	D		 NO			 NO		   -
+// 12	0x0004096	UP2		 NO			 NO		   -
+// 13	0x0008192	DOWN2	 NO			 NO		   -
+// 14	0x0016384	LEFT2	 NO			 NO		   -
+// 15	0x0032768	RIGHT2	 NO			 NO		   -
+// 16	0x0065536   RT		 YES		 NO		   -
+// 17	0x0131072   LT		 YES		 NO		   -
+// 18	0x0262144   AH1		 YES		 NO		   -
+// 19	0x0524288   AV1		 YES		 NO		   -
+// 20	0x1048576   AH2		 -			 -		   -
+// 21	0x2097152   AV2		 -			 -		   -
 
+#if POPNMUSIC
+{
+	{ 16, 13, 0x0040, 0 },	// White left (Start + Down)
+	{ 17, 12, 0x0010, 0 },	// Yellow left (B + Start)
+	{ 18, 11, 0x0020, 0 },	// Green left (Up + A)
+	{ 19, 10, 0x0080, 0 },	// Blue left (Up + Left)
+	{ 20, 9, 0x0004, 0 },	// Red centre (A)
+	{ 21, 8, 0x0400, 0 },	// Blue right (Up + Right + Z)
+	{ 22, 7, 0x0002, 0 },	// Green right (B)
+	{ 26, 6, 0x0200, 0 },	// Yellow right (Start + Left + Right)
+	{ 27, 5, 0x0001, 0 }	// White right (C)
+};
+#elseif DCCONTROLLER
+{
+
+};
+#elseif DCJOYSTICK
+{
+
+};
+#endif
 // Buffers
 static uint8_t RecieveBuffer[4096] __attribute__ ((aligned(4))); // Ring buffer for reading packets
 static uint8_t Packet[1024 + 8] __attribute__ ((aligned(4))); // Temp buffer for consuming packets (could remove)
@@ -274,8 +321,10 @@ void BuildInfoPacket()
 	InfoPacket.Info.Func = __builtin_bswap32(FUNC_CONTROLLER);
 #if POPNMUSIC
 	InfoPacket.Info.FuncData[0] = __builtin_bswap32(0x000006ff); // What buttons it supports
-#else
+#elseif DCCONTROLLER
 	InfoPacket.Info.FuncData[0] = __builtin_bswap32(0x000f06fe); // What buttons it supports
+#elseif DCJOYSTICK
+	InfoPacket.Info.FuncData[0] = __builtin_bswap32(0x00002047); // What buttons it supports
 #endif
 	InfoPacket.Info.FuncData[1] = 0;
 	InfoPacket.Info.FuncData[2] = 0;
@@ -284,8 +333,10 @@ void BuildInfoPacket()
 	strncpy(InfoPacket.Info.ProductName,
 #if POPNMUSIC
 			"pop'n music controller        ",
-#else
+#elseif DCCONTROLLER
 			"Dreamcast Controller          ",
+#elseif DCJOYSTICK
+			"Dreamcast Joystick          ", //IS THIS RIGHT? (PORKCHOP)
 #endif
 			sizeof(InfoPacket.Info.ProductName));
 	strncpy(InfoPacket.Info.ProductLicense,
