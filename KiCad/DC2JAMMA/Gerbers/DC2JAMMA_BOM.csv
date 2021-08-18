@@ -1,0 +1,9 @@
+Comment,Designator,Footprint,LCSC Part #
+BAT54S Schottky diode,"D1,D2",D_SOT-23_ANK,C408389
+"Conn_01x05 Generic connector, single row, 01x05, script generated (kicad-library-utils/schlib/autogen/connector/)","J2,J4",TerminalBlock_RND_205-00015_1x05_P5.00mm_Horizontal,C192780
+"Conn_02x20_Odd_Even Generic connector, double row, 02x20, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)",J5,PinSocket_2x20_P2.54mm_Vertical,C429965
+"Conn_01x02 Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)","J6,J7,J1,J3",PinHeader_1x02_P2.54mm_Vertical,C358684
+MiSTer_Addons_Logo ,Logo1,MiSTer_Addons_copper_15mm,-
+"10K_4xArray 4 resistor network, parallel topology, DIP package","RN6,RN2,RN5,RN4,RN7,RN3",R_Array_Convex_4x0402,C25725
+Pico ,"U1,U2",RPi_Pico_SMD_TH,-
+TVS_RCLAMP0524P-N ,"U4,U8,U3,U5,U6,U7",UDFN-10_1.35x2.6mm_P0.5mm,C316044
